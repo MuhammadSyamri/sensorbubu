@@ -3,96 +3,64 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Simulasi Deteksi Bubu</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        text-align: center;
-        padding: 50px;
-      }
-      #bubu,
-      #kapal {
-        width: 150px;
-        height: 150px;
-        margin: 20px;
-        border-radius: 50%;
-        background-color: #4caf50;
-        color: white;
-        font-size: 20px;
-        display: inline-block;
-        line-height: 150px;
-        cursor: pointer;
-      }
-      #kapal {
-        background-color: #f44336;
-      }
-    </style>
+    <title>Simulasi Deteksi Bubu dan Kapal</title>
   </head>
   <body>
-    <h1>Simulasi Deteksi Kedekatan Bubu dan Kapal</h1>
-    <p>Gerakkan tombol Kapal mendekati Bubu untuk mendeteksi kedekatannya!</p>
-
-    <div id="bubu" class="circle">Bubu</div>
-    <div id="kapal" class="circle">Kapal</div>
-
-    <audio
-      id="audio"
-      src="https://www.soundjay.com/button/beep-07.wav"
-      preload="auto"
-    ></audio>
+    <h1>Simulasi Deteksi Kedekatan Bubu dan Kapal dengan WebRTC</h1>
+    
+    <button onclick="startCommunication()">Mulai Komunikasi</button>
 
     <script>
-      const kapal = document.getElementById("kapal");
-      const bubu = document.getElementById("bubu");
-      const audio = document.getElementById("audio");
+      // Fungsi untuk mendapatkan posisi GPS
+      function getGPSPosition() {
+        if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition(function(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            sendPositionToPeer(lat, lon); // Kirim posisi ke peer
+          });
+        } else {
+          alert("Geolocation tidak tersedia pada perangkat ini.");
+        }
+      }
 
-      // Fungsi untuk mengukur jarak
-      function calculateDistance() {
-        let kapalPos = kapal.getBoundingClientRect();
-        let bubuPos = bubu.getBoundingClientRect();
+      // Fungsi untuk mengirim posisi ke peer (perangkat lainnya)
+      function sendPositionToPeer(lat, lon) {
+        // WebRTC untuk mengirim posisi
+        // Biasanya menggunakan RTCDataChannel untuk saling berbagi data
+        console.log(`Posisi: Latitude: ${lat}, Longitude: ${lon}`);
+      }
 
-        let distance = Math.sqrt(
-          Math.pow(kapalPos.left - bubuPos.left, 2) +
-            Math.pow(kapalPos.top - bubuPos.top, 2)
-        );
+      // Fungsi untuk memulai komunikasi dengan WebRTC
+      function startCommunication() {
+        // Kode untuk membangun peer-to-peer connection menggunakan WebRTC
+        // Ini hanya contoh dasar; sesuaikan dengan kode WebRTC yang lebih lengkap
+        console.log("Komunikasi dimulai...");
+        getGPSPosition();
+      }
 
+      // Fungsi untuk menghitung jarak antar posisi
+      function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; // Radius Bumi dalam km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distance = R * c; // Dalam km
         return distance;
       }
 
-      // Fungsi untuk memutar suara dan getar berdasarkan kedekatan
-      function checkProximity() {
-        let distance = calculateDistance();
-        let soundVolume = 1 - distance / 500; // Menyesuaikan volume suara berdasarkan jarak
-        if (soundVolume > 0) {
-          audio.volume = soundVolume;
-          audio.play();
-        }
-
-        // Simulasi getaran saat kedekatan
-        if (soundVolume > 0.5) {
-          navigator.vibrate([100, 100, 100]); // Getaran kuat jika dekat
-        } else if (soundVolume > 0.2) {
-          navigator.vibrate([50, 50]); // Getaran ringan jika agak jauh
+      // Fungsi untuk memeriksa jarak dan memberikan getaran
+      function checkProximity(distance) {
+        if (distance < 0.1) {
+          navigator.vibrate([200, 200, 200]); // Getaran kuat jika dekat
+        } else if (distance < 0.5) {
+          navigator.vibrate([100, 100]); // Getaran lebih ringan
         }
       }
-
-      // Event listener untuk pergerakan Kapal
-      kapal.addEventListener("mousedown", (e) => {
-        let offsetX = e.clientX - kapal.offsetLeft;
-        let offsetY = e.clientY - kapal.offsetTop;
-
-        function moveKapal(e) {
-          kapal.style.left = e.clientX - offsetX + "px";
-          kapal.style.top = e.clientY - offsetY + "px";
-          checkProximity();
-        }
-
-        document.addEventListener("mousemove", moveKapal);
-
-        document.addEventListener("mouseup", () => {
-          document.removeEventListener("mousemove", moveKapal);
-        });
-      });
     </script>
   </body>
 </html>
