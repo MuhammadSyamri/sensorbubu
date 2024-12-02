@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simulasi Deteksi Bubu</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 50px;
+      }
+      #bubu,
+      #kapal {
+        width: 150px;
+        height: 150px;
+        margin: 20px;
+        border-radius: 50%;
+        background-color: #4caf50;
+        color: white;
+        font-size: 20px;
+        display: inline-block;
+        line-height: 150px;
+        cursor: pointer;
+      }
+      #kapal {
+        background-color: #f44336;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Simulasi Deteksi Kedekatan Bubu dan Kapal</h1>
+    <p>Gerakkan tombol Kapal mendekati Bubu untuk mendeteksi kedekatannya!</p>
+
+    <div id="bubu" class="circle">Bubu</div>
+    <div id="kapal" class="circle">Kapal</div>
+
+    <audio
+      id="audio"
+      src="https://www.soundjay.com/button/beep-07.wav"
+      preload="auto"
+    ></audio>
+
+    <script>
+      const kapal = document.getElementById("kapal");
+      const bubu = document.getElementById("bubu");
+      const audio = document.getElementById("audio");
+
+      // Fungsi untuk mengukur jarak
+      function calculateDistance() {
+        let kapalPos = kapal.getBoundingClientRect();
+        let bubuPos = bubu.getBoundingClientRect();
+
+        let distance = Math.sqrt(
+          Math.pow(kapalPos.left - bubuPos.left, 2) +
+            Math.pow(kapalPos.top - bubuPos.top, 2)
+        );
+
+        return distance;
+      }
+
+      // Fungsi untuk memutar suara dan getar berdasarkan kedekatan
+      function checkProximity() {
+        let distance = calculateDistance();
+        let soundVolume = 1 - distance / 500; // Menyesuaikan volume suara berdasarkan jarak
+        if (soundVolume > 0) {
+          audio.volume = soundVolume;
+          audio.play();
+        }
+
+        // Simulasi getaran saat kedekatan
+        if (soundVolume > 0.5) {
+          navigator.vibrate([100, 100, 100]); // Getaran kuat jika dekat
+        } else if (soundVolume > 0.2) {
+          navigator.vibrate([50, 50]); // Getaran ringan jika agak jauh
+        }
+      }
+
+      // Event listener untuk pergerakan Kapal
+      kapal.addEventListener("mousedown", (e) => {
+        let offsetX = e.clientX - kapal.offsetLeft;
+        let offsetY = e.clientY - kapal.offsetTop;
+
+        function moveKapal(e) {
+          kapal.style.left = e.clientX - offsetX + "px";
+          kapal.style.top = e.clientY - offsetY + "px";
+          checkProximity();
+        }
+
+        document.addEventListener("mousemove", moveKapal);
+
+        document.addEventListener("mouseup", () => {
+          document.removeEventListener("mousemove", moveKapal);
+        });
+      });
+    </script>
+  </body>
+</html>
